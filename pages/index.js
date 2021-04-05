@@ -1,65 +1,67 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Head from 'next/head';
+import { useQuery, gql } from '@apollo/client';
+import { initializeApollo } from '../apollo/client';
+
+import styles from '../styles/Home.module.css';
+
+const GetAllProjects = gql`
+  query GetAllProjects($cid: ID!) {
+    projects(cid: $cid) {
+      id
+      name
+      client
+      program
+      expireDate
+      tasks {
+        id
+        role
+        roleID
+        projectID
+        hoursScoped
+      }
+      hours {
+        id
+        role
+        roleID
+        hoursLogged
+      }
+    }
+  }
+`;
 
 export default function Home() {
+  const { data, loading, error } = useQuery(GetAllProjects, {
+    variables: { cid: process.env.NEXT_PUBLIC_WF_CID },
+  });
+
+  if (error) return <span>{error.message}</span>;
+  if (loading) return <span>loading...</span>;
+
   return (
-    <div className={styles.container}>
+    <div>
       <Head>
-        <title>Create Next App</title>
+        <title>WF Project Tracker</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </div>
-  )
+  );
 }
+
+// TODO: figure out why query fails
+// ApolloError: Cannot destructure property 'dataSources' of 'undefined' as it is undefined.
+
+// export async function getStaticProps() {
+//   const apolloClient = initializeApollo();
+
+//   await apolloClient.query({
+//     query: GetAllProjects,
+//     variables: { cid: process.env.NEXT_PUBLIC_WF_CID },
+//   });
+
+//   return {
+//     props: {
+//       initialApolloState: apolloClient.cache.extract(),
+//     },
+//   };
+// }
