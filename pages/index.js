@@ -1,8 +1,7 @@
 import Head from 'next/head';
 import { useQuery, gql } from '@apollo/client';
 import { initializeApollo } from '../apollo/client';
-
-import styles from '../styles/Home.module.css';
+import ErrorMessage from '../components/ErrorMessage';
 
 const GetAllProjects = gql`
   query GetAllProjects($cid: ID!) {
@@ -34,8 +33,8 @@ export default function Home() {
     variables: { cid: process.env.NEXT_PUBLIC_WF_CID },
   });
 
-  if (error) return <span>{error.message}</span>;
   if (loading) return <span>loading...</span>;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <div>
