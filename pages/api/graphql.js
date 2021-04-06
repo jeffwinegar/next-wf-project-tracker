@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server-micro';
-import { schema } from '../../apollo/schema';
-import WorkfrontAPI from '../../apollo/datasources/workfront';
+import { schema } from '@/apollo/schema';
+import { WorkfrontAPI } from '@/apollo/datasources/workfront';
 
 const API_KEY = process.env.WF_API_KEY;
 

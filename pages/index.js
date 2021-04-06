@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useQuery, gql } from '@apollo/client';
-import { initializeApollo } from '../apollo/client';
-import ErrorMessage from '../components/ErrorMessage';
+import { initializeApollo } from '@/apollo/client';
+import ErrorMessage from '@/components/ErrorMessage';
 
 const GetAllProjects = gql`
   query GetAllProjects($cid: ID!) {
@@ -37,13 +37,15 @@ export default function Home() {
   if (error) return <ErrorMessage error={error} />;
 
   return (
-    <div>
+    <>
       <Head>
         <title>WF Project Tracker</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-    </div>
+      <main>
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      </main>
+    </>
   );
 }
 
