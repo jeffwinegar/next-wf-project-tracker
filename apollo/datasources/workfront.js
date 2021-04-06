@@ -1,6 +1,6 @@
 import { RESTDataSource } from 'apollo-datasource-rest';
 
-export default class WorkfrontAPI extends RESTDataSource {
+export class WorkfrontAPI extends RESTDataSource {
   constructor() {
     super();
     this.baseURL = 'https://wunderman.my.workfront.com/attask/api/v12.0/';
