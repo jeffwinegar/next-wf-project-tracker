@@ -16,12 +16,21 @@ export const typeDefs = gql`
     hours: [Hours!]!
   }
 
+  type User {
+    id: ID!
+    firstName: String!
+    lastName: String!
+    title: String
+    email: String!
+  }
+
   type Task {
     id: ID!
     role: String!
     roleID: String
     projectID: String!
     hoursScoped: Int!
+    assignedTo: User!
   }
 
   type Hours {

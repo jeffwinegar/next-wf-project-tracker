@@ -1,7 +1,10 @@
 import Head from 'next/head';
 import { useQuery, gql } from '@apollo/client';
 import { initializeApollo } from '@/apollo/client';
+import styled from 'styled-components';
+
 import ErrorMessage from '@/components/ErrorMessage';
+import Project from '@/components/Project';
 
 const GetAllProjects = gql`
   query GetAllProjects($cid: ID!) {
@@ -17,6 +20,10 @@ const GetAllProjects = gql`
         roleID
         projectID
         hoursScoped
+        assignedTo {
+          firstName
+          lastName
+        }
       }
       hours {
         id
@@ -29,8 +36,13 @@ const GetAllProjects = gql`
 `;
 
 export default function Home() {
-  const { data, loading, error } = useQuery(GetAllProjects, {
+  const {
+    data: { projects },
+    loading,
+    error,
+  } = useQuery(GetAllProjects, {
     variables: { cid: process.env.NEXT_PUBLIC_WF_CID },
+    pollInterval: 60000, // 1 minute
   });
 
   if (loading) return <span>loading...</span>;
@@ -39,30 +51,41 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>WF Project Tracker</title>
+        <title>+WTOC Project Tracker</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
+        <StyledListingContainer>
+          {projects.map((project) => (
+            <Project key={project.id} project={project} />
+          ))}
+        </StyledListingContainer>
       </main>
     </>
   );
 }
 
-// TODO: figure out why query fails
-// ApolloError: Cannot destructure property 'dataSources' of 'undefined' as it is undefined.
+export async function getStaticProps() {
+  const apolloClient = initializeApollo();
 
-// export async function getStaticProps() {
-//   const apolloClient = initializeApollo();
+  await apolloClient.query({
+    query: GetAllProjects,
+    variables: { cid: process.env.NEXT_PUBLIC_WF_CID },
+  });
 
-//   await apolloClient.query({
-//     query: GetAllProjects,
-//     variables: { cid: process.env.NEXT_PUBLIC_WF_CID },
-//   });
+  return {
+    props: {
+      initialApolloState: apolloClient.cache.extract(),
+    },
+    revalidate: 1,
+  };
+}
 
-//   return {
-//     props: {
-//       initialApolloState: apolloClient.cache.extract(),
-//     },
-//   };
-// }
+const StyledListingContainer = styled.div`
+  width: 100%;
+  padding: 1.5em;
+
+  > * + * {
+    margin-top: 1.5em;
+  }
+`;

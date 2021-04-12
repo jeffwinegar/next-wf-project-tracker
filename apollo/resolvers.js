@@ -1,8 +1,8 @@
+import { getAllProjects, getProjectByID } from './workfront-connector';
+
 export const resolvers = {
   Query: {
-    projects: async (_, { cid }, { dataSources }) =>
-      await dataSources.workfrontAPI.getAllProjects({ companyID: cid }),
-    project: async (_, { id }, { dataSources }) =>
-      await dataSources.workfrontAPI.getProjectByID({ projID: id }),
+    projects: (_, { cid }) => getAllProjects(cid),
+    project: (_, { id }) => getProjectByID(id),
   },
 };
