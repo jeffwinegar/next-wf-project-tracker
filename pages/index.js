@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useQuery, gql } from '@apollo/client';
 import { initializeApollo } from '@/apollo/client';
 import styled from 'styled-components';
+import Downshift from 'downshift';
 
 import ErrorMessage from '@/components/ErrorMessage';
 import Project from '@/components/Project';
@@ -55,6 +56,72 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
+        <Downshift itemToString={(proj) => (proj ? proj.name : '')}>
+          {({
+            getInputProps,
+            getItemProps,
+            getLabelProps,
+            getMenuProps,
+            getToggleButtonProps,
+            isOpen,
+            inputValue,
+            highlightedIndex,
+            selectedItem,
+            clearSelection,
+            getRootProps,
+          }) => (
+            <div>
+              <label {...getLabelProps()}>Search project name:</label>
+              <div {...getRootProps({}, { suppressRefError: true })}>
+                <input
+                  {...getInputProps({ placeholder: 'Search project name' })}
+                />
+                {selectedItem ? (
+                  <button onClick={clearSelection} aria-label="clear selection">
+                    x
+                  </button>
+                ) : (
+                  <button
+                    {...getToggleButtonProps({ 'aria-label': 'toggle menu' })}
+                  >
+                    &#8595;
+                  </button>
+                )}
+              </div>
+              <StyledDropdown {...getMenuProps()}>
+                {isOpen
+                  ? projects
+                      .filter(
+                        (proj) =>
+                          !inputValue ||
+                          proj.name
+                            .toLowerCase()
+                            .includes(inputValue.toLowerCase())
+                      )
+                      .map((proj, idx) => (
+                        <li
+                          {...getItemProps({
+                            key: proj.id,
+                            index: idx,
+                            item: proj,
+                            style: {
+                              backgroundColor:
+                                highlightedIndex === idx
+                                  ? 'var(--offWhite)'
+                                  : 'var(--white)',
+                              fontWeight:
+                                selectedItem === proj ? '600' : 'normal',
+                            },
+                          })}
+                        >
+                          {proj.name}
+                        </li>
+                      ))
+                  : null}
+              </StyledDropdown>
+            </div>
+          )}
+        </Downshift>
         <StyledListingContainer>
           {projects.map((project) => (
             <Project key={project.id} project={project} />
@@ -82,10 +149,16 @@ export async function getStaticProps() {
 }
 
 const StyledListingContainer = styled.div`
-  width: 100%;
   padding: 1.5em;
+  width: 100%;
 
   > * + * {
     margin-top: 1.5em;
   }
+`;
+
+const StyledDropdown = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
 `;
