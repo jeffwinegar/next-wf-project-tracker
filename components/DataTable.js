@@ -161,7 +161,7 @@ const StyledCaret = styled.div`
   border-left: solid 4px transparent;
   display: inline-block;
   height: 0;
-  transition: transform 100ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
   vertical-align: middle;
   width: 0;
 `;
