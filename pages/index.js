@@ -1,12 +1,12 @@
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useQuery, gql } from '@apollo/client';
-import { initializeApollo } from '@/apollo/client';
 import styled from 'styled-components';
-import Downshift from 'downshift';
-import { useState, useEffect } from 'react';
 
+import { initializeApollo } from '@/apollo/client';
 import ErrorMessage from '@/components/ErrorMessage';
 import Project from '@/components/Project';
+import Search from '@/components/Search';
 
 const GetAllProjects = gql`
   query GetAllProjects($cid: ID!) {
@@ -47,18 +47,20 @@ export default function Home() {
     pollInterval: 60000, // 1 minute
   });
 
-  if (loading) return <span>loading...</span>;
-  if (error) return <ErrorMessage error={error} />;
-
   const [projects, setProjects] = useState(initialProjects);
-  const [searchResult, setSearchResult] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const updateSearch = (term) => setSearchTerm(term);
 
   useEffect(() => {
     const selectedProject = initialProjects.filter((proj) =>
-      proj.name.includes(searchResult)
+      proj.name.includes(searchTerm)
     );
     setProjects(selectedProject);
-  }, [searchResult]);
+  }, [searchTerm]);
+
+  if (loading) return <span>loading...</span>;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <>
@@ -66,85 +68,31 @@ export default function Home() {
         <title>+WTOC Project Tracker</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>
-        <Downshift
-          onChange={(selection) =>
-            setSearchResult(selection ? selection.name : '')
-          }
-          itemToString={(proj) => (proj ? proj.name : '')}
-        >
-          {({
-            getInputProps,
-            getItemProps,
-            getLabelProps,
-            getMenuProps,
-            getToggleButtonProps,
-            isOpen,
-            inputValue,
-            highlightedIndex,
-            selectedItem,
-            clearSelection,
-            getRootProps,
-          }) => (
-            <StyledSearch>
-              <label {...getLabelProps()}>Search projects</label>
-              <StyledField
-                {...getRootProps({ isOpen }, { suppressRefError: true })}
-              >
-                <StyledInput
-                  {...getInputProps({
-                    placeholder: 'Enter name or number',
-                  })}
-                />
-                {selectedItem ? (
-                  <StyledControlButton
-                    onClick={clearSelection}
-                    aria-label="clear selection"
-                  >
-                    <XIcon />
-                  </StyledControlButton>
-                ) : (
-                  <StyledControlButton
-                    {...getToggleButtonProps({ 'aria-label': 'toggle menu' })}
-                  >
-                    <ArrowIcon isOpen={isOpen} />
-                  </StyledControlButton>
-                )}
-              </StyledField>
-              <StyledMenu {...getMenuProps({ isOpen })}>
-                {isOpen
-                  ? initialProjects
-                      .filter(
-                        (proj) =>
-                          !inputValue ||
-                          proj.name
-                            .toLowerCase()
-                            .includes(inputValue.toLowerCase())
-                      )
-                      .map((proj, idx) => (
-                        <StyledItem
-                          {...getItemProps({
-                            key: proj.id,
-                            index: idx,
-                            item: proj,
-                            isActive: highlightedIndex === idx,
-                            isSelected: selectedItem === proj,
-                          })}
-                        >
-                          {proj.name}
-                        </StyledItem>
-                      ))
-                  : null}
-              </StyledMenu>
-            </StyledSearch>
-          )}
-        </Downshift>
-        <StyledListingContainer>
+      <header>
+        <StyledNavigation>
+          <StyledLink
+            href="https://wunderman.my.workfront.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <WFLogo />
+          </StyledLink>
+          <Search
+            label="Find a project"
+            placeholder="Enter name or number"
+            items={initialProjects}
+            onSearch={updateSearch}
+            aria-label="My Workfront"
+          />
+        </StyledNavigation>
+      </header>
+      <StyledMainContainer>
+        <StyledListing>
           {projects.map((project) => (
             <Project key={project.id} project={project} />
           ))}
-        </StyledListingContainer>
-      </main>
+        </StyledListing>
+      </StyledMainContainer>
     </>
   );
 }
@@ -161,43 +109,26 @@ export async function getStaticProps() {
     props: {
       initialApolloState: apolloClient.cache.extract(),
     },
-    revalidate: 1,
+    revalidate: 1, // seconds
   };
 }
 
-function ArrowIcon({ isOpen }) {
+function WFLogo() {
   return (
-    <svg
-      viewBox="0 0 20 20"
-      preserveAspectRatio="none"
-      width={16}
-      fill="transparent"
-      stroke="var(--black)"
-      strokeWidth="1.5px"
-      transform={isOpen ? 'rotate(180)' : undefined}
-    >
-      <path d="M1,6 L10,15 L19,6" />
+    <svg viewBox="0 0 100 100" width="32" fill="currentColor">
+      <path d="M89.4 21.6C82 8.5 76.4 1.3 76.4 1.3S64.9 0.1 50.2 0.1 23.6 1.3 23.6 1.3s-5.7 7.3-13 20.3S0.1 44.7 0.1 44.7s6.2 12.3 23.1 30.8S50 100 50 100s10.1-6.1 26.9-24.5S100 44.7 100 44.7 96.7 34.7 89.4 21.6zM57.4 73.4H42.7l-3.1-7.3L50 64.4l10.5 1.7L57.4 73.4zM61.9 37.7L77.3 27.3 66.8 64l-13.7-2.4 -1.7-5.2 7-5.5H41.6l7 5.5 -1.7 5.2 -13.7 2.4L22.7 27.3l15.4 10.4 -0.3 12.1 6.7-18.4 -22.1-7.6 11.6-6.2L50 23.1l16.1-5.5 11.6 6.2L55.6 31.5l6.7 18.4L61.9 37.7z" />
     </svg>
   );
 }
 
-function XIcon() {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      preserveAspectRatio="none"
-      width={12}
-      fill="transparent"
-      stroke="var(--black)"
-      strokeWidth="2px"
-    >
-      <path d="M1,1 L19,19" />
-      <path d="M19,1 L1,19" />
-    </svg>
-  );
-}
+const StyledMainContainer = styled.main``;
 
-const StyledListingContainer = styled.div`
+const StyledNavigation = styled.nav`
+  background-color: var(--white);
+  padding: 1em 1.5em 1.5em;
+`;
+
+const StyledListing = styled.div`
   padding: 1.5em;
   width: 100%;
 
@@ -206,107 +137,13 @@ const StyledListingContainer = styled.div`
   }
 `;
 
-const StyledSearch = styled.div`
-  display: flex;
-  flex-direction: column;
-  max-width: 425px;
-  width: 100%;
-
-  label {
-    font-size: 85%;
-    font-weight: 600;
-    line-height: 1;
-    margin-bottom: 0.3125rem;
-  }
-`;
-
-const StyledField = styled.div`
-  align-items: center;
-  background-color: var(--white);
-  border: solid 1px var(--gray);
-  border-radius: 5px;
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-  padding-right: 0.25em;
-  transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-
-  &:focus-within {
-    border-color: var(--darkGray);
-  }
-  ${(props) =>
-    props.isOpen
-      ? 'border-bottom-right-radius: 0; border-bottom-left-radius: 0;'
-      : null}
-`;
-
-const StyledInput = styled.input`
-  border: none;
-  flex-grow: 1;
-  line-height: 1;
+const StyledLink = styled.a`
+  color: var(--gray);
   outline: 0;
-  padding: 0.625em;
-  -moz-appearance: none;
-  -webkit-appearance: none;
-`;
+  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 
-const StyledControlButton = styled.button`
-  align-items: center;
-  background-color: transparent;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  height: 2em;
-  justify-content: center;
-  outline: 0;
-  transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-  width: 2em;
-
-  &:hover {
-    background-color: var(--lightGray);
-  }
+  &:hover,
   &:focus {
-    background-color: var(--darkGray);
+    color: var(--wfOrange);
   }
-  &:focus:not(:focus-visible) {
-    background-color: transparent;
-  }
-  &:focus-visible {
-    background-color: var(--gray);
-  }
-`;
-
-const StyledMenu = styled.ul`
-  border-color: var(--darkGray);
-  border-top-width: 0;
-  border-right-width: 1px;
-  border-bottom-width: 1px;
-  border-left-width: 1px;
-  border-style: solid;
-  border-radius: 0 0 5px 5px;
-  display: inline-block;
-  list-style: none;
-  max-height: 20rem;
-  margin: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0;
-  width: 100%;
-
-  ${(props) => (props.isOpen ? null : 'border: none;')}
-`;
-
-const StyledItem = styled.li`
-  background-color: ${(props) =>
-    props.isActive ? 'var(--lightGray)' : 'var(--white)'};
-  cursor: pointer;
-  display: block;
-  font-weight: ${(props) => (props.isSelected ? '600' : 'normal')};
-  position: relative;
-  line-height: 1;
-  padding: 0.625em;
 `;
