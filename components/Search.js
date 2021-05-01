@@ -12,6 +12,7 @@ export default function Search({ items, onSearch, ...rest }) {
 
   return (
     <Downshift
+      id="project-search"
       onChange={(selection) => {
         setSearch(selection ? selection.name : '');
       }}
